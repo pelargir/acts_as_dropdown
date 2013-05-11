@@ -83,9 +83,8 @@ module DeLynnBerry
       # * <tt>:select</tt>: By default, this is * as in SELECT * FROM, but can be changed if you for example want to do a join, but not
       #   include the joined columns.
       def acts_as_dropdown(*args)
-        options = {:text => 'name', :value => self.primary_key}
+        options = {:text => 'name', :value => self.primary_key, :order => self.table_name + '.' + self.primary_key}
         options.merge!(args.pop) unless args.empty?
-        options.merge!(:order => options[:value]) unless options.has_key?(:order)
 
         self.dropdown_text_attr   = options.delete(:text)
         self.dropdown_value_attr  = options.delete(:value)
