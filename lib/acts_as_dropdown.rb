@@ -83,9 +83,8 @@ module DeLynnBerry
       # * <tt>:select</tt>: By default, this is * as in SELECT * FROM, but can be changed if you for example want to do a join, but not
       #   include the joined columns.
       def acts_as_dropdown(*args)
-        options = {:text => 'name', :value => self.primary_key}
+        options = {:text => 'name', :value => self.primary_key, :order => self.table_name + '.' + self.primary_key}
         options.merge!(args.pop) unless args.empty?
-        options.merge!(:order => options[:value]) unless options.has_key?(:order)
 
         self.dropdown_text_attr   = options.delete(:text)
         self.dropdown_value_attr  = options.delete(:value)
@@ -125,8 +124,9 @@ module DeLynnBerry
         blank   = options.delete(:include_blank)
         options.merge!(:order => value) if (!value.nil? && self.dropdown_value_attr != value) && options.has_key?(:order) == false
 
-        items = find(:all, options.empty? ? self.find_arguments : options).to_dropdown(text   || self.dropdown_text_attr,
-                                                                                       value  || self.dropdown_value_attr)
+        hash = options.empty? ? self.find_arguments : options
+        items = where(hash[:conditions]).order(hash[:order]).to_a.to_dropdown(text   || self.dropdown_text_attr,
+                                                                              value  || self.dropdown_value_attr)
 
         if args.empty? && self.include_blank
           items.insert(0, self.include_blank.kind_of?(String) ? [self.include_blank, ""] : ["", ""])
@@ -154,7 +154,7 @@ class Array #:nodoc:
   #                             a string that will be placed in the value attribute of the option group.
   #
   # === Example
-  #   >> @states = State.find(:all, :order => "id")
+  #   >> @states = State.order("id")
   #   >> @states.to_dropdown 
   #   => [["Alabama", 1], ["Alaska", 2], ["Arizona", 3], ["California", 4], ["Colorado", 5]]
   def to_options_for_select(text = :name, value = :id, include_blank = false)
